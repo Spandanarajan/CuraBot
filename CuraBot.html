@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CuraBot - AI Health Assistant</title>
+    <style>
+        body {
+            font-family: 'Helvetica', Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            background-color: #2b579a;
+            margin-right: 15px;
+            border-radius: 5px;
+        }
+        
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2b579a;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 15px 0 10px 0;
+        }
+        
+        .symptoms-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: white;
+            margin-bottom: 20px;
+        }
+        
+        .symptom-item {
+            margin: 5px 0;
+        }
+        
+        .analyze-btn {
+            background-color: #2b579a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .analyze-btn:hover {
+            background-color: #1e3f72;
+        }
+        
+        .results-frame {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            background-color: white;
+        }
+        
+        .results-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .results-text {
+            min-height: 150px;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            overflow-y: auto;
+        }
+        
+        .footer {
+            font-size: 10px;
+            color: #666;
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .bold-text {
+            font-weight: bold;
+        }
+        
+        .disclaimer {
+            font-size: 10px;
+            color: gray;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo"></div>
+            <div class="title">CuraBot Health Assistant</div>
+        </div>
+        
+        <div class="section-title">Select your symptoms:</div>
+        
+        <div class="symptoms-container" id="symptomsContainer">
+            <!-- Symptoms will be added here by JavaScript -->
+        </div>
+        
+        <button class="analyze-btn" id="analyzeBtn">Analyze Symptoms</button>
+        
+        <div class="results-frame">
+            <div class="results-title">Analysis Results</div>
+            <div class="results-text" id="resultsText">Your analysis results will appear here...</div>
+        </div>
+        
+        <div class="footer">
+            © 2023 CuraBot AI Healthcare Solutions | Not a substitute for professional medical advice
+        </div>
+    </div>
+
+    <script>
+        // Symptoms data
+        const symptomsList = [
+            "Fever", "Headache", "Fatigue", "Cough", "Sore throat",
+            "Shortness of breath", "Nausea", "Dizziness", "Chest pain",
+            "Muscle aches", "Runny nose", "Sneezing", "Chills", "Sweating",
+            "Abdominal pain", "Diarrhea", "Vomiting", "Rash", "Joint pain",
+            "Loss of taste/smell", "Difficulty swallowing", "Swollen lymph nodes"
+        ];
+        
+        // Initialize the symptoms checkboxes
+        const symptomsContainer = document.getElementById('symptomsContainer');
+        symptomsList.forEach(symptom => {
+            const symptomItem = document.createElement('div');
+            symptomItem.className = 'symptom-item';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = symptom.replace(/\s+/g, '-').toLowerCase();
+            checkbox.value = symptom;
+            
+            const label = document.createElement('label');
+            label.htmlFor = checkbox.id;
+            label.textContent = symptom;
+            
+            symptomItem.appendChild(checkbox);
+            symptomItem.appendChild(label);
+            symptomsContainer.appendChild(symptomItem);
+        });
+        
+        // Conditions database
+        const conditionsDB = {
+            "Common Cold": ["Cough", "Sore throat", "Runny nose", "Sneezing"],
+            "Flu": ["Fever", "Headache", "Fatigue", "Muscle aches", "Chills", "Sweating"],
+            "COVID-19": ["Fever", "Cough", "Shortness of breath", "Fatigue", "Loss of taste/smell"],
+            "Stomach Flu": ["Nausea", "Vomiting", "Diarrhea", "Abdominal pain"],
+            "Allergies": ["Sneezing", "Runny nose"],
+            "Migraine": ["Headache", "Nausea", "Dizziness"]
+        };
+        
+        // Recommendations
+        const recommendations = {
+            "Common Cold": "Rest, drink fluids, over-the-counter cold medicine",
+            "Flu": "Rest, fluids, antiviral medication if early in illness",
+            "COVID-19": "Isolate, get tested, consult healthcare provider",
+            "Stomach Flu": "Stay hydrated, BRAT diet, rest",
+            "Allergies": "Antihistamines, avoid allergens",
+            "Migraine": "Rest in dark room, pain relievers, avoid triggers",
+            "Unknown Condition": "Consult a healthcare professional"
+        };
+        
+        // Analyze button click handler
+        document.getElementById('analyzeBtn').addEventListener('click', analyzeSymptoms);
+        
+        function analyzeSymptoms() {
+            // Get selected symptoms
+            const selectedSymptoms = [];
+            document.querySelectorAll('#symptomsContainer input[type="checkbox"]:checked').forEach(checkbox => {
+                selectedSymptoms.push(checkbox.value);
+            });
+            
+            if (selectedSymptoms.length === 0) {
+                alert("Please select at least one symptom to analyze.");
+                return;
+            }
+            
+            // Diagnose conditions
+            const possibleConditions = diagnoseConditions(selectedSymptoms);
+            
+            // Display results
+            let resultsHtml = `<span class="bold-text">Based on your symptoms:</span><br><br>`;
+            
+            selectedSymptoms.forEach(symptom => {
+                resultsHtml += `• ${symptom}<br>`;
+            });
+            
+            resultsHtml += `<br><span class="bold-text">Possible conditions:</span><br><br>`;
+            
+            for (const [condition, confidence] of Object.entries(possibleConditions)) {
+                resultsHtml += `• ${condition} (confidence: ${confidence}%)<br>`;
+                resultsHtml += `&nbsp;&nbsp;Recommended action: ${getRecommendation(condition)}<br><br>`;
+            }
+            
+            resultsHtml += `<span class="disclaimer">Disclaimer: This is not a substitute for professional medical advice. Please consult a doctor for proper diagnosis.</span>`;
+            
+            document.getElementById('resultsText').innerHTML = resultsHtml;
+        }
+        
+        function diagnoseConditions(symptoms) {
+            const possibleConditions = {};
+            
+            for (const [condition, conditionSymptoms] of Object.entries(conditionsDB)) {
+                const matches = conditionSymptoms.filter(symptom => symptoms.includes(symptom));
+                if (matches.length > 0) {
+                    const confidence = Math.min(90, matches.length * 15 + Math.floor(Math.random() * 20));
+                    possibleConditions[condition] = confidence;
+                }
+            }
+            
+            if (Object.keys(possibleConditions).length === 0) {
+                possibleConditions["Unknown Condition"] = 50;
+            }
+            
+            // Sort by confidence (descending)
+            return Object.fromEntries(
+                Object.entries(possibleConditions).sort((a, b) => b[1] - a[1])
+            );
+        }
+        
+        function getRecommendation(condition) {
+            return recommendations[condition] || "Consult a healthcare professional";
+        }
+    </script>
+</body>
+</html>
